@@ -21,8 +21,12 @@ fn main() {
     let mut s = FxHashSet::default();
 
     for line in reader.lines() {
+        // println!("{:?}", line.unwrap());
         let b: Vec<u8> = line.unwrap().as_bytes().to_vec();
+        // println!("from abc {:?}", b);
+        // print_type_of(&b);
         s.insert(b);
+        // break
     }
 
     let mut bam = bam::Reader::from_path(&args[2]).unwrap();
@@ -32,7 +36,9 @@ fn main() {
     for r in bam.records() {
         let record = r.unwrap();
         // println!("{:#?}", record.seq().as_bytes().chunks(38));
-        for c in record.seq().encoded.windows(38){
+        for c in record.seq().as_bytes().windows(38){
+            // println!("{:?}, {:?}, {:?}", c, s.contains(c), s);
+            // print_type_of(&c);
             if s.contains(c){
                 // println!("{:?}", str::from_utf8(c));
                 // println!("{:?}", str::from_utf8(&record.seq().as_bytes()).unwrap());
@@ -40,7 +46,6 @@ fn main() {
                 break
             }
         }
-        // break
     }
 }
 
@@ -57,3 +62,6 @@ fn main() {
 //     Ok(b)
 // }
 
+// fn print_type_of<T>(_: &T) {
+//     println!("{}", std::any::type_name::<T>())
+// }
