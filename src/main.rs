@@ -7,6 +7,7 @@ use std::io::{BufRead, BufReader};
 extern crate rustc_hash;
 use rustc_hash::{FxHashMap, FxHashSet};
 
+// 原来从根上就不行，就当我周末做了个梦吧哈哈
 
 fn encode(seq: String) -> Vec<u8> {
     let m:FxHashMap<&str, u8> = vec![
@@ -39,15 +40,17 @@ fn encode(seq: String) -> Vec<u8> {
         ("C", 32),
         ("G", 64),
         ("T", 128),
+        ("N", 240),
     ].into_iter().collect();
 
     let mut o = vec![];
     for i in seq.as_bytes().chunks(2).map(str::from_utf8) {
         o.push(m.get(i.unwrap()).unwrap().clone())
     }
-
+    println!("{:?}", o);
     o
 }
+
 
 fn main() {
     // println!("Hello, world!");
@@ -68,28 +71,29 @@ fn main() {
     // i know how to convert string to 4 bits
     for line in reader.lines() {
         // let b: Vec<u8> = line.unwrap().as_bytes().to_vec();
-        //原来如此，unwrap不能乱用，因为用完unwrap就失去了处理里面的Ok或者Some的机会
-        //之前这里就是不能clone了，因为不能直接克隆Result,只能克隆里面的String,
-        // 但是和unwrap写在一行的时候就已经移动了
         if let Ok(li) = line {
-            for base in "ACGTN".chars() {
-                let lb: Vec<u8> = encode(format!("{}{}", base, li));
-                s.insert(lb);
-            }
-            for base in [
-                "AA","AC","AG","AT","AN",
-                "CA","CC","CG","CT","CN",
-                "GA","GC","GG","GT","GN",
-                "TA","TC","TG","TT","TN",
-                "NA","NC","NG","NT","NN",
-            ] {
-                let sb: Vec<u8> = encode(format!("{}{}", base, li));
-                s.insert(sb);
-            }
+            // for base in "ACGT".chars() {
+            //     // println!("lb: {}{}", base, li);
+            //     // let lb: Vec<u8> = encode(format!("{}{}", base, li));
+            //     s.insert(encode(format!("{}{}", base, li)));
+            // }
+            // println!("b: {}", li);
+            s.insert(li.as_bytes().to_owned());
+            // for base in [
+            //     "AA","AC","AG","AT",
+            //     "CA","CC","CG","CT",
+            //     "GA","GC","GG","GT",
+            //     "TA","TC","TG","TT",
+            // ] {
+            //     println!("sb: {}{}", base, li);
+            //     println!("sb: {}{}", li, base);
+            //     // let sb: Vec<u8> = encode(format!("{}{}", base, li));
+            //     s.insert(encode(format!("{}{}", base, li)));
+            //     s.insert(encode(format!("{}{}", li, base)));
+            // }
         }
     }
 
-    // println!("s: {:?}", s);
 
     let mut bam = bam::Reader::from_path(&args[2]).unwrap();
     let header = bam::Header::from_template(bam.header());
@@ -98,7 +102,14 @@ fn main() {
 
     for r in bam.records() {
         let record = r.unwrap();
-        for c in record.seq().encoded.windows(20){
+        // println!("c: {:?}", record.seq().encoded);
+
+        // let slice = record.seq().encoded;
+        // if s.contains(&slice[slice.len()-20..]) {
+            // out.write(&record).unwrap();
+        // }
+
+        for c in record.seq().as_bytes().windows(38){
             // println!("c: {:?}", c);
             if s.contains(c){
                 out.write(&record).unwrap();
